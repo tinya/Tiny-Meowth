@@ -4,9 +4,12 @@ import discord
 import asyncio
 import logging
 import re
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 bot_token = 'YOUR TOKEN HERE'
 mainMeowth_id = '346759953006198784'
+service_account_file = 'path/to/service_account_file'
 
 mM_raid = re.compile('^Meowth!.*(Coordinate here!)')
 
@@ -14,6 +17,49 @@ logging.basicConfig(level=logging.INFO)
 
 tinyMeowth = discord.Client()
 loop = asyncio.get_event_loop_policy()
+
+def findGym(details) # returns a gmaps link if the details are recognized. returns False otherwise
+	try:
+		#connect to google sheet 
+		creds = ServiceAccountCredentials.from_json_keyfile_name(service_account_file, ['https://spreadsheets.google.com/feeds'])
+		client = gspread.authorize(creds)
+		sheet = client.open_by_url(Meowth.config['gsheet_url']).sheet1
+
+		# Extract the list of location nicknames & clean them
+		gyms = [x.lower().strip() for x in sheet.col_values(1)]
+		
+		if details.lower().strip() in gyms:
+			details = sheet.cell(gyms.index(details.lower().strip())+1,2).value
+		else: #exit if we didn't find a match in the spreadsheet
+			return False 
+			
+	except Exception as err:
+		logger.info('Problem with location nicknames. Channel:{} URL:{} UserText:{} Error:{}'.format(channel.name,gsheet_url,details,err))
+
+	#litterally stealing Meowths code to get another maps
+	if "/maps" in details and "http" in details:
+		mapsindex = details.find('/maps')
+		newlocindex = details.rfind('http', 0, mapsindex)
+		if newlocindex == (- 1):
+			return
+		newlocend = details.find(' ', newlocindex)
+		if newlocend == (- 1):
+			newloc = details[newlocindex:]
+			return newloc
+		else:
+			newloc = details[newlocindex:newlocend + 1]
+			return newloc
+	details_list = details.split()
+	#look for lat/long coordinates in the location details. If provided, 
+	#then channel location hints are not needed in the	maps query
+	if re.match (r'^\s*-?\d{1,2}\.?\d*,\s+-?\d{1,3}\.?\d*\s*$', details): #regex looks for lat/long in the format similar to 42.434546, -83.985195. 
+		return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
+			
+	
+	loc_list = ["wake","county","nc"] #hard code our location details
+	
+	return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), '+'.join(loc_list))
+		
 
 
 @tinyMeowth.event
