@@ -1,4 +1,4 @@
-# Tiny-Meowth
+# Tiny Meowth
 ![discord.py](https://img.shields.io/badge/discord.py-v0.16.6-green.svg)
 ![python](https://img.shields.io/badge/python-3.6-blue.svg)
 
@@ -12,7 +12,10 @@ This was created for features that are hard to bake into the Meowth project.
 ## Dependencies
 - Python 3.6+
 - [discord.py](https://github.com/Rapptz/discord.py) and its dependencies
+- Google Spreadsheet
 
+## Restrictions
+Because Meowth is programmed to _ignore_ commands from other bots, Tiny Meowth can only reply with Google Maps links in order to update raid locations.
 
 ## Setup
 1. [Create your own Discord Bot](https://discordapp.com/developers/applications/me) and make note of the bot token.
@@ -29,4 +32,4 @@ mainMeowth_id = '346759953006198784'
 
 To get this ID, [enable developer view](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) in Discord, right click on Meowth, and select 'Copy ID'.
 
-4. Run `__main__.py` and you should see your bot come online. It will being listening to Meowth!
+4. Run `__main__.py` and you should see your bot come online. It will be listening to Meowth and respond if necessary!
