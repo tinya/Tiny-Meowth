@@ -9,10 +9,14 @@ This was created for features that are hard to bake into the Meowth project.
 ## Features
 - Updates directions for newly created raid channels
 
-## Dependencies
+## Requirements
 - Python 3.6+
-- [discord.py](https://github.com/Rapptz/discord.py) and its dependencies
+- [discord.py](https://github.com/Rapptz/discord.py) library and its dependencies
+- [gspread](https://github.com/burnash/gspread) library
+- [oauth2client](https://github.com/google/oauth2client/) library
 - Google Spreadsheet
+
+`pip` should take care of all libraries.
 
 ## Restrictions
 Because Meowth is programmed to _ignore_ commands from other bots, Tiny Meowth can only reply with Google Maps links in order to update raid locations.
@@ -22,7 +26,7 @@ Because Meowth is programmed to _ignore_ commands from other bots, Tiny Meowth c
 2. Replace `YOUR TOKEN HERE` with your bot token:
 
 ```python
-bot_token = 'YOUR TOKEN HERE'
+bot_token = 'BOT TOKEN HERE'
 ```
 3. (optional) By default, Tiny Meowth listens to the public version Meowth that can be invited to your server. If you are running your own instance of Meowth (or somehow the underlying ID changes), change the `mainMeowth_id` variable to reflect the new main Meowth ID:
 
