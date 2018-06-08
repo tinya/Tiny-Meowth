@@ -4,6 +4,7 @@ import discord
 import logging
 import re
 import gspread
+import time
 from oauth2client.service_account import ServiceAccountCredentials
 
 bot_token = 'BOT TOKEN HERE'
@@ -68,6 +69,7 @@ async def on_message(message):
         raid_name = message.content.split(".")[0].split(":")[-1].lstrip()  # magic that parses the reported raid name
         location = findGym(raid_name)
         if location:
+            time.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
             await tinyMeowth.send_message(message.channel, location)
         else:
             print(raid_name + ' location not found in sheet.')

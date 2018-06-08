@@ -36,4 +36,6 @@ mainMeowth_id = '346759953006198784'
 
 To get this ID, [enable developer view](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) in Discord, right click on Meowth, and select 'Copy ID'.
 
-4. Run `__main__.py` and you should see your bot come online. It will be listening to Meowth and respond if necessary!
+4. ??????
+
+5. Run `__main__.py` and you should see your bot come online. It will be listening to Meowth and respond if necessary!
