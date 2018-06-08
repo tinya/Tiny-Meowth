@@ -58,6 +58,7 @@ def findGym(details):  # returns a gmaps link if the details are recognized. ret
             return False
     except Exception as err:
         print(err)
+        return False
 
 
 
