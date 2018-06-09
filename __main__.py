@@ -5,16 +5,15 @@ import logging
 import re
 import gspread
 import time
+import json
 from oauth2client.service_account import ServiceAccountCredentials
 
-bot_token = 'BOT TOKEN HERE'
-gsheet_id = 'G SHEET ID HERE'
-mainMeowth_id = '346759953006198784'
-service_account_file = 'client-secret.json'
-loc_list = ["your", "loc", "here"]  # ie orange county ca is ["orange", "county", "ca"]
+
+with open('config.json', 'r') as fd:
+	config = json.load(fd)
 
 mM_raid = re.compile('^Meowth!.*(Coordinate here!)')
-gsheet_creds = ServiceAccountCredentials.from_json_keyfile_name(service_account_file,
+gsheet_creds = ServiceAccountCredentials.from_json_keyfile_name(config['service_account_file'],
                                                                  ['https://spreadsheets.google.com/feeds'])
 
 logger = logging.getLogger('discord')
@@ -43,7 +42,7 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized.
     for i in range(3):  # three tries to get spreadsheet
         try:
             print("opening gsheet")
-            sheet = gc.open_by_key(gsheet_id).sheet1  # connect to google sheet
+            sheet = gc.open_by_key(config['gsheet_id']).sheet1  # connect to google sheet
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
@@ -79,7 +78,7 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized.
                     details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
             return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
 
-        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), '+'.join(loc_list))
+        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), '+'.join(config['loc_list']))
 
     else:  # exit if we didn't find a match in the spreadsheet
         return False
@@ -91,7 +90,7 @@ async def on_message(message):
     if message.author == tinyMeowth.user:  # don't want bot to reply to self
         return
 
-    if message.author.id == mainMeowth_id and mM_raid.match(message.content):
+    if message.author.id == config['mainMeowth_id'] and mM_raid.match(message.content):
         raid_name = message.content.split(".")[0].split(":")[-1].lstrip()  # magic that parses the reported raid name
         print("finding raid location")
         location = findGym(gsheet_client, raid_name)
@@ -107,4 +106,4 @@ async def on_ready():
     print('Logged in as ' + tinyMeowth.user.name + " with ID " + tinyMeowth.user.id)
 
 
-tinyMeowth.run(bot_token)
+tinyMeowth.run(config['bot_token'])

@@ -1,0 +1,35 @@
+{
+"//": "Configuration file for Tiny-Meowth Discord bot.",
+
+
+"//": "Server information",
+
+"//": "Language you want for TinyMeowth.(currently not used)",
+"//": "fr, en",
+"bot-language": "en",
+"pokemon-language": "en",
+
+"//": "Bot token ID, needed for authentication.",
+"//": "This is found on the app page when you click to reveal the bot user's token",
+"bot_token": "yourtoken",
+
+"//": "Default bot prefix. Used if server has not set one.(currently not used)",
+"default_prefix":"!",
+
+"//": "Define Meowth's id",
+"//": "The default value is for FoglyOgly's hosted Meowth instance. Change this value if you host your own instance of Meowth",
+"//": "Meowth will only listen for raids announced by this ID",
+"mainMeowth_id": "346759953006198784",
+
+"//": "Google Service Account credentials filename",
+"//": "here are instructions to make the service account: http://gspread.readthedocs.io/en/latest/oauth2.html",
+"service_account_file": "filename.json",
+
+"//": "Google Sheet ID",
+"//": "the ID can be found in the url: https://docs.google.com/spreadsheets/d/<id>/edit?usp=sharing",
+"gsheet_id": "your sheet id",
+
+"//": "Google Sheet ID",
+"//": "orange county ca is used as a default value below",
+loc_list = ["orange", "county", "ca"]
+}
