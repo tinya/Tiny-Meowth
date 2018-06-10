@@ -1,1 +1,7 @@
 client-secret.json
+config.json
+venv
+mapdata
+logs
+.DS_Store
+.idea

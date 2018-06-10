@@ -29,7 +29,7 @@
 "//": "the ID can be found in the url: https://docs.google.com/spreadsheets/d/<id>/edit?usp=sharing",
 "gsheet_id": "your sheet id",
 
-"//": "Google Sheet ID",
+"//": "Server location - location that is added to the maps query for street addresses",
 "//": "orange county ca is used as a default value below",
-loc_list = ["orange", "county", "ca"]
+"loc_list": "orange+county+ca"
 }
