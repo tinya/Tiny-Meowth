@@ -8,13 +8,12 @@ import time
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 
-
 with open('config.json', 'r') as fd:
     config = json.load(fd)
 
 mM_raid = re.compile('^Meowth!.*(Coordinate here!)')
 gsheet_creds = ServiceAccountCredentials.from_json_keyfile_name(config['service_account_file'],
-                                                                 ['https://spreadsheets.google.com/feeds'])
+                                                                ['https://spreadsheets.google.com/feeds'])
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -28,24 +27,26 @@ gsheet_client = gspread.authorize(gsheet_creds)
 
 def getGsheetCreds():
     # Gets oauth2 credentials from gsheet
+    global gsheet_client
+
     try:
         print("Getting gsheet credentials")
-        creds = gspread.authorize(gsheet_creds)
+        gsheet_client = gspread.authorize(gsheet_creds)
     except Exception as err:
         print("Exception getting gsheet credentials!")
         print(err)
         return
-    return creds
-    
-def genGsheetDict(gc):
+
+
+def genGsheetDict():
     for i in range(3):  # three tries to get spreadsheet
         try:
             print("opening gsheet")
-            sheet = gc.open_by_key(config['gsheet_id']).sheet1  # connect to google sheet
+            sheet = gsheet_client.open_by_key(config['gsheet_id']).sheet1  # get google sheet
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
-            gc = getGsheetCreds()
+            getGsheetCreds()
         else:
             break
     else:
@@ -54,11 +55,12 @@ def genGsheetDict(gc):
 
     gyms = [x.lower().strip() for x in sheet.col_values(1)]
     locations = sheet.col_values(2)
-    
+
     return dict(zip(gyms, locations))
-    
-    
-def findGymFromDict(gymDict, details):  # returns a gmaps link if the details are recognized in the cached gsheet info. returns False otherwise
+
+
+# returns a gmaps link if the details are recognized in the cached gsheet info. returns False otherwise
+def findGymFromDict(gymDict, details):
     if details.lower().strip() in gymDict.keys():
         try:
             details = gymDict[details.lower().strip()]
@@ -86,21 +88,23 @@ def findGymFromDict(gymDict, details):  # returns a gmaps link if the details ar
                     details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
             return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
 
-        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), config['loc_list'])
+        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list),
+                                                                                config['loc_list'])
 
     else:  # exit if we didn't find a match in the spreadsheet
         return False
 
 
-def findGym(gc, details):  # returns a gmaps link if the details are recognized from a direct poll of the gsheet. returns False otherwise
+# returns a gmaps link if the details are recognized from a direct poll of the gsheet. returns False otherwise
+def findGym(details):
     for i in range(3):  # three tries to get spreadsheet
         try:
             print("opening gsheet")
-            sheet = gc.open_by_key(config['gsheet_id']).sheet1  # connect to google sheet
+            sheet = gsheet_client.open_by_key(config['gsheet_id']).sheet1  # connect to google sheet
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
-            gc = getGsheetCreds()
+            getGsheetCreds()
         else:
             break
     else:
@@ -133,7 +137,8 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized 
                     details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
             return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
 
-        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), '+'.join(config['loc_list']))
+        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list),
+                                                                                config['loc_list'])
 
     else:  # exit if we didn't find a match in the spreadsheet
         return False
@@ -147,7 +152,7 @@ async def on_message(message):
     if message.author.id == config['mainMeowth_id'] and mM_raid.match(message.content):
         raid_name = message.content.split(".")[0].split(":")[-1].lstrip()  # magic that parses the reported raid name
         print("finding raid location")
-        location = findGymFromDict(GsheetDict, raid_name)
+        location = findGym(raid_name)
         if location:
             print("GYM FOUND: " + raid_name)
             time.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
@@ -160,5 +165,6 @@ async def on_message(message):
 async def on_ready():
     print('Logged in as ' + tinyMeowth.user.name + " with ID " + tinyMeowth.user.id)
 
-GsheetDict = genGsheetDict(getGsheetCreds())
+
+GsheetDict = genGsheetDict()
 tinyMeowth.run(config['bot_token'])
