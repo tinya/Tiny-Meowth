@@ -48,17 +48,21 @@ def genGsheetDict(gc):
             gc = getGsheetCreds()
         else:
             break
+    else:
+        print("Failed getting spreadsheet three times")
+        return
+
     gyms = [x.lower().strip() for x in sheet.col_values(1)]
     locations = sheet.col_values(2)
     
-    return dict(zip(gyms,locations))
+    return dict(zip(gyms, locations))
     
     
 def findGymFromDict(gymDict, details):  # returns a gmaps link if the details are recognized in the cached gsheet info. returns False otherwise
     if details.lower().strip() in gymDict.keys():
         try:
             details = gymDict[details.lower().strip()]
-        except KeyError: # i don't know how we could end up with a keyerror.. but to be safe
+        except KeyError:  # i don't know how we could end up with a keyerror.. but to be safe
             print("key error found. Returning a false match")
             return False
         # stealing Meowth's code to get another maps link
@@ -74,6 +78,7 @@ def findGymFromDict(gymDict, details):  # returns a gmaps link if the details ar
             else:
                 newloc = details[newlocindex:newlocend + 1]
                 return newloc
+
         details_list = details.split()
         # look for lat/long coordinates in the location details. If provided,
         # then channel location hints are not needed in the maps query
@@ -81,10 +86,11 @@ def findGymFromDict(gymDict, details):  # returns a gmaps link if the details ar
                     details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
             return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
 
-        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), '+'.join(config['loc_list']))
+        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list), config['loc_list'])
 
     else:  # exit if we didn't find a match in the spreadsheet
         return False
+
 
 def findGym(gc, details):  # returns a gmaps link if the details are recognized from a direct poll of the gsheet. returns False otherwise
     for i in range(3):  # three tries to get spreadsheet
@@ -101,11 +107,11 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized 
         print("Failed getting spreadsheet three times")
         return False
 
-    # Extract the list of location nicknames & clean them
-    gyms = [x.lower().strip() for x in sheet.col_values(1)]
+    gyms = [x.lower().strip() for x in sheet.col_values(1)]  # Extract the list of location nicknames & clean them
 
     if details.lower().strip() in gyms:
         details = sheet.cell(gyms.index(details.lower().strip()) + 1, 2).value
+
         # stealing Meowth's code to get another maps link
         if "/maps" in details and "http" in details:
             mapsindex = details.find('/maps')
@@ -119,6 +125,7 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized 
             else:
                 newloc = details[newlocindex:newlocend + 1]
                 return newloc
+
         details_list = details.split()
         # look for lat/long coordinates in the location details. If provided,
         # then channel location hints are not needed in the maps query
@@ -134,19 +141,19 @@ def findGym(gc, details):  # returns a gmaps link if the details are recognized 
 
 @tinyMeowth.event
 async def on_message(message):
-    print("in on_message")
     if message.author == tinyMeowth.user:  # don't want bot to reply to self
         return
 
     if message.author.id == config['mainMeowth_id'] and mM_raid.match(message.content):
         raid_name = message.content.split(".")[0].split(":")[-1].lstrip()  # magic that parses the reported raid name
         print("finding raid location")
-        location = findGym(gsheet_client, raid_name)
+        location = findGymFromDict(GsheetDict, raid_name)
         if location:
+            print("GYM FOUND: " + raid_name)
             time.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
             await tinyMeowth.send_message(message.channel, location)
         else:
-            print(raid_name + ' location not found in sheet.')
+            print("GYM NOT FOUND: " + raid_name)
 
 
 @tinyMeowth.event
