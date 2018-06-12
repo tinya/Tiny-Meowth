@@ -11,7 +11,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 with open('config.json', 'r') as fd:
     config = json.load(fd)
 
-mM_raid = re.compile('^Meowth!.*(Coordinate here!)')
+mM_raid = re.compile('^Meowth!.*Details: (.*)\. Coordinate here')
 gsheet_creds = ServiceAccountCredentials.from_json_keyfile_name(config['service_account_file'],
                                                                 ['https://spreadsheets.google.com/feeds'])
 
@@ -149,9 +149,11 @@ async def on_message(message):
     if message.author == tinyMeowth.user:  # don't want bot to reply to self
         return
 
-    if message.author.id == config['mainMeowth_id'] and mM_raid.match(message.content):
-        raid_name = message.content.split(".")[0].split(":")[-1].lstrip()  # magic that parses the reported raid name
-        print("finding raid location")
+    m = mM_raid.match(message.content)
+
+    if message.author.id == config['mainMeowth_id'] and m:
+        raid_name = m.group(1) # magic that parses the reported raid name
+        print("finding raid location " + raid_name)
         location = findGym(raid_name)
         if location:
             print("GYM FOUND: " + raid_name)
