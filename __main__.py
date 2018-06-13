@@ -42,7 +42,7 @@ def genGsheetDict():
     for i in range(3):  # three tries to get spreadsheet
         try:
             print("opening gsheet")
-            sheet = gsheet_client.open_by_key(config['gsheet_id']).sheet1  # get google sheet
+            sheet = gsheet_client.open_by_key(config['gsheet_id'])  # get google sheet
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
@@ -53,17 +53,23 @@ def genGsheetDict():
         print("Failed getting spreadsheet three times")
         return
 
-    gyms = [x.lower().strip() for x in sheet.col_values(1)]
-    locations = sheet.col_values(2)
+    # Extract the list of location nicknames & clean them
+    gl1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms
+    ll1 = [x for x in sheet.get_worksheet(0).col_values(2)]
+    gl2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
+    ll2 = [x for x in sheet.get_worksheet(1).col_values(2)]
 
-    return dict(zip(gyms, locations))
+    d1 = dict(zip(gl1, ll1))
+    d2 = dict(zip(gl2, ll2))
+
+    return {**d1, **d2}
 
 
 # returns a gmaps link if the details are recognized in the cached gsheet info. returns False otherwise
-def findGymFromDict(gymDict, details):
-    if details.lower().strip() in gymDict.keys():
+def findGymFromDict(gymDict, raid_name):
+    if raid_name.lower().strip() in gymDict.keys():
         try:
-            details = gymDict[details.lower().strip()]
+            details = gymDict[raid_name.lower().strip()]
         except KeyError:  # i don't know how we could end up with a keyerror.. but to be safe
             print("key error found. Returning a false match")
             return False
@@ -96,11 +102,11 @@ def findGymFromDict(gymDict, details):
 
 
 # returns a gmaps link if the details are recognized from a direct poll of the gsheet. returns False otherwise
-def findGym(details):
+def findGym(raid_name):
     for i in range(3):  # three tries to get spreadsheet
         try:
             print("opening gsheet")
-            sheet = gsheet_client.open_by_key(config['gsheet_id']).sheet1  # connect to google sheet
+            sheet = gsheet_client.open_by_key(config['gsheet_id'])  # connect to google sheet
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
@@ -111,37 +117,39 @@ def findGym(details):
         print("Failed getting spreadsheet three times")
         return False
 
-    gyms = [x.lower().strip() for x in sheet.col_values(1)]  # Extract the list of location nicknames & clean them
+    g1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms names
+    g2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
 
-    if details.lower().strip() in gyms:
-        details = sheet.cell(gyms.index(details.lower().strip()) + 1, 2).value
-
-        # stealing Meowth's code to get another maps link
-        if "/maps" in details and "http" in details:
-            mapsindex = details.find('/maps')
-            newlocindex = details.rfind('http', 0, mapsindex)
-            if newlocindex == (- 1):
-                return
-            newlocend = details.find(' ', newlocindex)
-            if newlocend == (- 1):
-                newloc = details[newlocindex:]
-                return newloc
-            else:
-                newloc = details[newlocindex:newlocend + 1]
-                return newloc
-
-        details_list = details.split()
-        # look for lat/long coordinates in the location details. If provided,
-        # then channel location hints are not needed in the maps query
-        if re.match(r'^\s*-?\d{1,2}\.?\d*,\s+-?\d{1,3}\.?\d*\s*$',
-                    details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
-            return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
-
-        return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list),
-                                                                                config['loc_list'])
-
+    if raid_name.lower().strip() in g1:
+        details = sheet.get_worksheet(0).cell(g1.index(raid_name.lower().strip()) + 1, 2).value
+    elif raid_name.lower.strip() in g2:
+        details = sheet.get_worksheet(1).cell(g2.index(raid_name.lower().strip()) + 1, 2).value
     else:  # exit if we didn't find a match in the spreadsheet
         return False
+
+    # stealing Meowth's code to get another maps link
+    if "/maps" in details and "http" in details:
+        mapsindex = details.find('/maps')
+        newlocindex = details.rfind('http', 0, mapsindex)
+        if newlocindex == (- 1):
+            return
+        newlocend = details.find(' ', newlocindex)
+        if newlocend == (- 1):
+            newloc = details[newlocindex:]
+            return newloc
+        else:
+            newloc = details[newlocindex:newlocend + 1]
+            return newloc
+
+    details_list = details.split()
+    # look for lat/long coordinates in the location details. If provided,
+    # then channel location hints are not needed in the maps query
+    if re.match(r'^\s*-?\d{1,2}\.?\d*,\s+-?\d{1,3}\.?\d*\s*$',
+                details):  # regex looks for lat/long in the format similar to 42.434546, -83.985195.
+        return "https://www.google.com/maps/search/?api=1&query={0}".format('+'.join(details_list))
+
+    return 'https://www.google.com/maps/search/?api=1&query={0}+{1}'.format('+'.join(details_list),
+                                                                            config['loc_list'])
 
 
 @tinyMeowth.event
