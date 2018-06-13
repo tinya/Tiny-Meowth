@@ -120,9 +120,11 @@ def findGym(raid_name):
     g1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms names
     g2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
 
+    print
+
     if raid_name.lower().strip() in g1:
         details = sheet.get_worksheet(0).cell(g1.index(raid_name.lower().strip()) + 1, 2).value
-    elif raid_name.lower.strip() in g2:
+    elif raid_name.lower().strip() in g2:
         details = sheet.get_worksheet(1).cell(g2.index(raid_name.lower().strip()) + 1, 2).value
     else:  # exit if we didn't find a match in the spreadsheet
         return False
