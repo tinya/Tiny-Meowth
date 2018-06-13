@@ -149,11 +149,11 @@ async def on_message(message):
     if message.author == tinyMeowth.user:  # don't want bot to reply to self
         return
 
-    m = mM_raid.match(message.content)
+    m = mM_raid.match(message.content)  # magic that parses the reported raid name
 
     if message.author.id == config['mainMeowth_id'] and m:
-        raid_name = m.group(1) # magic that parses the reported raid name
-        print("finding raid location " + raid_name)
+        raid_name = m.group(1)
+        print("FINDING GYM: " + raid_name)
         location = findGym(raid_name)
         if location:
             print("GYM FOUND: " + raid_name)
