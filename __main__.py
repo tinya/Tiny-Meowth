@@ -41,8 +41,15 @@ def getGsheetCreds():
 def genGsheetDict():
     for i in range(3):  # three tries to get spreadsheet
         try:
-            print("opening gsheet")
+            print("preparing gsheet")
             sheet = gsheet_client.open_by_key(config['gsheet_id'])  # get google sheet
+
+            # Extract the list of location nicknames & clean them
+            print("getting worksheets")
+            gl1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms
+            ll1 = [x for x in sheet.get_worksheet(0).col_values(2)]
+            gl2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
+            ll2 = [x for x in sheet.get_worksheet(1).col_values(2)]
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
@@ -52,12 +59,6 @@ def genGsheetDict():
     else:
         print("Failed getting spreadsheet three times")
         return
-
-    # Extract the list of location nicknames & clean them
-    gl1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms
-    ll1 = [x for x in sheet.get_worksheet(0).col_values(2)]
-    gl2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
-    ll2 = [x for x in sheet.get_worksheet(1).col_values(2)]
 
     d1 = dict(zip(gl1, ll1))
     d2 = dict(zip(gl2, ll2))
@@ -103,10 +104,13 @@ def findGymFromDict(gymDict, raid_name):
 
 # returns a gmaps link if the details are recognized from a direct poll of the gsheet. returns False otherwise
 def findGym(raid_name):
-    for i in range(3):  # three tries to get spreadsheet
+    for i in range(3):  # three tries to get worksheets
         try:
-            print("opening gsheet")
+            print("preparing gsheet")
             sheet = gsheet_client.open_by_key(config['gsheet_id'])  # connect to google sheet
+            print("getting worksheets")
+            g1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms names
+            g2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
         except Exception as err:
             print("Exception in opening gsheet!")
             print(err)
@@ -116,9 +120,6 @@ def findGym(raid_name):
     else:
         print("Failed getting spreadsheet three times")
         return False
-
-    g1 = [x.lower().strip() for x in sheet.get_worksheet(0).col_values(1)]  # Actual gyms names
-    g2 = [x.lower().strip() for x in sheet.get_worksheet(1).col_values(1)]  # Gym aliases
 
     if raid_name.lower().strip() in g1:
         details = sheet.get_worksheet(0).cell(g1.index(raid_name.lower().strip()) + 1, 2).value
