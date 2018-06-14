@@ -167,14 +167,14 @@ async def on_message(message):
         if location:
             print("GYM FOUND: " + raid_name)
             time.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
-            await tinyMeowth.send_message(message.channel, location)
+            await  message.channel.send(location)
         else:
             print("GYM NOT FOUND: " + raid_name)
 
 
 @tinyMeowth.event
 async def on_ready():
-    print('Logged in as ' + tinyMeowth.user.name + " with ID " + tinyMeowth.user.id)
+    print('Logged in as ' + tinyMeowth.user.name + " with ID " + str(tinyMeowth.user.id))
 
 
 GsheetDict = genGsheetDict()
