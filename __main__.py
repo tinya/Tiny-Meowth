@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import discord
 import logging
 import re
 import gspread
-import time
+import asyncio
 import json
+import discord
+from discord.ext import commands
 from oauth2client.service_account import ServiceAccountCredentials
 
 with open('config.json', 'r') as fd:
     config = json.load(fd)
 
-mM_raid = re.compile('^Meowth!.*Details: (.*)\. Coordinate here')
+mM_raid = re.compile('Meowth!.*Details: (.*)\. Coordinate here')
 gsheet_creds = ServiceAccountCredentials.from_json_keyfile_name(config['service_account_file'],
                                                                 ['https://spreadsheets.google.com/feeds'])
 
@@ -21,7 +22,7 @@ handler = logging.FileHandler(filename='logs/discord.log', encoding='utf-8', mod
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-tinyMeowth = discord.Client()
+tinyMeowth = commands.Bot(config['default_prefix'])
 gsheet_client = gspread.authorize(gsheet_creds)
 
 
@@ -158,7 +159,7 @@ async def on_message(message):
     if message.author == tinyMeowth.user:  # don't want bot to reply to self
         return
 
-    m = mM_raid.match(message.content)  # magic that parses the reported raid name
+    m = mM_raid.search(message.content)  # magic that parses the reported raid name
 
     if message.author.id == config['mainMeowth_id'] and m:
         raid_name = m.group(1)
@@ -166,15 +167,18 @@ async def on_message(message):
         location = findGym(raid_name)
         if location:
             print("GYM FOUND: " + raid_name)
-            time.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
-            await  message.channel.send(location)
+            await asyncio.sleep(3)  # sleep for a short time so Meowth doesn't ignore us
+            await message.channel.send(location)
         else:
             print("GYM NOT FOUND: " + raid_name)
+
+    # await tinyMeowth.process_commands(message)
 
 
 @tinyMeowth.event
 async def on_ready():
     print('Logged in as ' + tinyMeowth.user.name + " with ID " + str(tinyMeowth.user.id))
+    await tinyMeowth.change_presence(activity=discord.Game(name="discord v1"))
 
 
 GsheetDict = genGsheetDict()
